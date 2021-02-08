@@ -15,6 +15,13 @@ get_keytab_date() {
 #	echo $W
 }
 
+put_hash () {
+	echo updating etcd key ${TOPIC} with value $1
+	$ETCD_HOME/etcdctl --cacert $MYCA --cert=$MYCERT --key=$MYKEY --endpoints=${ETCD_HOST}:2379 \
+	    put ${TOPIC} \
+		$1
+}
+
 # ----- main
 
 if [ $# -gt 0 ]; then
@@ -25,9 +32,12 @@ if [ $# -gt 1 ]; then
 	TEST_ADKEYTAB="echo test simulating ... "
 fi
 
+LOCAL_HASH=$(md5sum $KEYTAB | cut -f1 -d" ")
+ETCD_HASH=$($ETCD_HOME/etcdctl --cacert=$MYCA --cert=$MYCERT --key=$MYKEY --endpoints=$ETCD_HOST:2379 get --print-value-only ${TOPIC})
+
 get_keytab_date
 
-# get keytab age 
+# compute keytab age 
 python3 - $W $TEST_DATE <<EOF
 import sys
 import datetime
@@ -54,15 +64,15 @@ EOF
 RD=$?
 #echo $RD
 
-if [ $RD -gt $KEYTAB_AGE_LIMIT ] ; then
+if [ "$LOCAL_HASH" != "$ETCD_HASH" ] ; then
+	put_hash $LOCAL_HASH
+elif [ $RD -gt $KEYTAB_AGE_LIMIT ] ; then
 	kinit -kt $KEYTAB $KEYPRINC
 #	klist
 	$TEST_ADKEYTAB adkeytab -C -V -K ${KEYTAB} ${KEYPRINC}
 	RC=$?
 	if [ $RC -eq 0 ]; then
-		$ETCD_HOME/etcdctl --cacert $MYCA --cert=$MYCERT --key=$MYKEY --endpoints=${ETCD_HOST}:2379 \
-		       	put ${TOPIC}\
-			$(md5sum $KEYTAB | cut -f1 -d" ")
+		put_hash $LOCAL_HASH	
 	fi
 else 
 	echo "${KEYTAB} last changed on ${W} - within age limit ${KEYTAB_AGE_LIMIT}. skip action."
