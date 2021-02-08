@@ -1,0 +1,13 @@
+data-dir:       '/var/lib/etcd'
+#
+listen-peer-urls:     http://0.0.0.0:2380
+listen-client-urls:     https://0.0.0.0:2379
+initial-advertise-peer-urls:     http://0.0.0.0:2380
+advertise-client-urls:     http://0.0.0.0:2379
+#
+client-transport-security:
+        cert-file: '/var/centrify/net/certs/auto_CentrifyW2008EntWorkstationAuthenticationRSASHA256.cert'
+        key-file: '/var/centrify/net/certs/auto_CentrifyW2008EntWorkstationAuthenticationRSASHA256.key'
+        trusted-ca-file: '/var/centrify/net/certs/trust_0469FAEACCACDB52BA6F73ED8176100FD34A7A36.cert'
+        client-cert-auth: true
+#peer-transport-secutiry:
