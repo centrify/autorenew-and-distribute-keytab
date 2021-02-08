@@ -18,30 +18,34 @@ note, the certifacet template should have ...
 >               TLS Web Client Authentication, TLS Web Server Authentication
 etcd can be set up in systemd to automatically start on host startup.
 
-on hostA - this is where we generate and maintain the master copy of xxx.keytab (principal: xxx).
+## on hostA
+this is where we generate and maintain the master copy of xxx.keytab (principal: xxx).
 this is also where etcd runs.
-this is because other client hosts have to be able to reach this host (by ssh) to get the updated xxx.keytab anyway.
-this is where you will need to run `check_and_renewkeytab.sh`.
-if can be set up in crontab to run once a day.
+the idea is because other client hosts have to be able to reach this host to scp the updated xxx.keytab anyway.
 
-on hostB - these are the client hosts that will connect to etcd to _watch_ for changes, 
+this is where you will run `check_and_renewkeytab.sh` - likely in crontab, once a day.
+it will read xxx.keytab to get latest KVNO and work out the days delta to to day.
+if over the defalt limit of 28 days, it will invoke adkeytab to change password, and update xxx.keytab with the new KVNO.
+it will then `put` the etcd key (xxx.keytab) with value of mdsum of the new xxx.keytab.
+
+* note the key-value pair will persists over etcd restart.
+* you can modify it to use sha256sum if you like (both sides).
+
+## on hostB
+these are the client hosts that will connect to etcd to __watch__ for changes, 
 and run `scp` to hostA to get the updated the xxx.keytab.
 
-etcd will maintain a key-value pair. 
-the key being the file name (xxx.keytab), and value is the md5sum of the file (you can change it to sh56sum if you like).
-hostA will update the key when it invokes adkeytab to change password, and update xxx.keytab with the new KVNO.
-it will then `put` the etcd key.
 hostB gets the notication, check md5sum to see if it indeed changed, and then proceed to use `scp` to get the updated xxx.keytab.
 
-client side `watch_keytab.sh` on startup will check to make sure if has initial copy of xxx.keytab, and the etcdctl CLI that it needs.
-`watch_keytab_update.sh` is invoked from within watch_keytab.sh.
-watch_keytab.sh runs in infinite loop ... use ctl-c to break out.
+* client side `watch_keytab.sh` on startup will check to make sure if has initial copy of xxx.keytab, and the etcdctl CLI that it needs.
+* `watch_keytab_update.sh` is invoked from within watch_keytab.sh.
+* watch_keytab.sh runs in infinite loop ... use ctl-c to break out.
 it is intended to be setup as systemd service to be started on system startup as well. 
 
 # other notes
-* `check_and_renew_keytab.sh` embeds a python call. it will need module "dateutil". do `pip3 install python-dateutil` to get it
-* regarding xxx.keytab. on AD, check to make sure service account "xxx" has permission to allow it to `change password` and `reset password` by `SELF`.
-* regarding the private key used by the shell scripts, and etcd, make sure it is readable by the invocation process. by default, it is only readable by root.
+* `check_and_renew_keytab.sh` embeds a python call. it will import module `dateutil`. do `pip3 install python-dateutil` to get it
+* regarding xxx.keytab. on AD, check to make sure service account "xxx" has permission to allow for `change password` and `reset password` by `SELF`.
+* regarding the private key (auto_xxx.key) used by the shell scripts and etcd, make sure it is readable by the invocation process. by default, it is only readable by root.
 
 # testing
 * `check_and_renew_keytab.sh` allows paramater "mm/dd/yy" to sumilate a future date. otherwise, it will only initiate change after 28 days.
