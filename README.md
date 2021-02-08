@@ -24,7 +24,7 @@ this is also where etcd runs.
 the idea is because other client hosts have to be able to reach this host to scp the updated xxx.keytab anyway.
 
 this is where you will run `check_and_renewkeytab.sh` - likely in crontab, once a day.
-it will read xxx.keytab to get latest KVNO and work out the days delta to to day.
+it will read xxx.keytab to get latest KVNO and work out the days delta to today.
 if over the defalt limit of 28 days, it will invoke adkeytab to change password, and update xxx.keytab with the new KVNO.
 it will then `put` the etcd key (xxx.keytab) with value of mdsum of the new xxx.keytab.
 
@@ -32,10 +32,11 @@ it will then `put` the etcd key (xxx.keytab) with value of mdsum of the new xxx.
 * you can modify it to use sha256sum if you like (both sides).
 
 ## on hostB
-these are the client hosts that will connect to etcd to __watch__ for changes, 
+these are the client hosts that will connect to etcd to ___watch___ for changes, 
 and run `scp` to hostA to get the updated the xxx.keytab.
 
 hostB gets the notication, check md5sum to see if it indeed changed, and then proceed to use `scp` to get the updated xxx.keytab.
+to avoid stampeding, there is a built-in radom delay of up to 15 seconds.
 
 * client side `watch_keytab.sh` on startup will check to make sure if has initial copy of xxx.keytab, and the etcdctl CLI that it needs.
 * `watch_keytab_update.sh` is invoked from within watch_keytab.sh.
