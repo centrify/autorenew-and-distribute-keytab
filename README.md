@@ -2,7 +2,7 @@
 automatically renew service account keytab (using adkeytab), and distribute to multiple other hosts 
 
 # motivation
-customers find the adkeytab utility useful to generate krb5.keytab for service account(s) that may be used for applications like Hadoop, MongoDB, Oracle, etc.
+customers find the adkeytab utility useful to generate krb5.keytab for service account(s) that may be used for authentication purpose (in place of password) for applications like Hadoop, MongoDB, Oracle, etc. 
 
 the problems remaining are
 * change the password at interval
