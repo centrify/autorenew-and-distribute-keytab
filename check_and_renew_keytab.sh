@@ -72,6 +72,7 @@ elif [ $RD -gt $KEYTAB_AGE_LIMIT ] ; then
 	$TEST_ADKEYTAB adkeytab -C -V -K ${KEYTAB} ${KEYPRINC}
 	RC=$?
 	if [ $RC -eq 0 ]; then
+		LOCAL_HASH=$(md5sum $KEYTAB | cut -f1 -d" ")
 		put_hash $LOCAL_HASH	
 	fi
 else 
