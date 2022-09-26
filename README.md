@@ -1,4 +1,11 @@
 # autorenew-and-distribute-keytab
+
+# PUBLIC ARCHIVE
+
+> ***NOTE***
+> This repo is archived.
+> This is still available under the licensing terms, but is not being actively developed or updated any further. Please see [DelineaXPM](https://github.com/DelineaXPM) for active projects.
+
 automatically renew service account keytab (using adkeytab), and distribute to multiple other hosts 
 
 # motivation
